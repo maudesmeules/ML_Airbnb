@@ -1,0 +1,28 @@
+'''
+Created on 29 sept. 2017
+
+project: exploration of the Airbnb dataset
+
+@author: Yury
+'''
+#importing the libraries
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+
+#my_function. It takes an 2dimensional array and prints it as a dataframe
+#this is useful because it allows a better print
+def dfprint(an_array):
+    df = pd.DataFrame(data=an_array[:,:])
+    print(df)
+
+#import the dataset
+filename = r'C:\Users\Laurent\TermProjectML\train_users_2.csv'
+dataset = pd.read_csv(filename)
+'''
+X = dataset.iloc[:, :-1].values
+y = dataset.iloc[:, 3:].values
+'''
+
+#EXPLORATION DES VARIABLES DANS LE dataset
+dataset.head(30)
