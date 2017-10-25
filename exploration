@@ -1,0 +1,218 @@
+'''
+Created on 29 sept. 2017
+
+project: exploration of the Airbnb dataset
+
+@author: Yury
+'''
+#importing the libraries
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+
+#my_function. It takes an 2dimensional array and prints it as a dataframe
+#this is useful because it allows a better print
+def dfprint(an_array):
+    df = pd.DataFrame(data=an_array[:,:])
+    print(df)
+
+#import the dataset
+filename = r'C:\Users\Laurent\TermProjectML\train_users_2.csv'
+dataset = pd.read_csv(filename)
+'''
+X = dataset.iloc[:, :-1].values
+y = dataset.iloc[:, 3:].values
+'''
+
+#EXPLORATION DES VARIABLES DANS LE dataset
+dataset.head(30)
+
+'''
+------------------CLEANING THE DATASET--------------------
+'''
+#cleaning the dates
+def substr(aString):
+    aString = str(aString)
+    return (aString[0:4] + '-' + aString[4:6] + '-' + aString[6:8])
+
+from datetime import datetime
+def str_to_date(a_date_string):
+    if(a_date_string == 'nan'):
+        date = datetime.strptime('2000-01-01' , '%Y-%m-%d')
+        return date 
+    else:
+        date = datetime.strptime(a_date_string , '%Y-%m-%d')
+        return date 
+
+#dataset.loc[0:,'timestamp_first_active'].dtype
+
+#first activity month
+temp_serie = dataset.loc[0:,'timestamp_first_active'].apply(substr)
+temp_serie = temp_serie.apply(str_to_date)
+dataset['Date_first_active'] = temp_serie 
+dataset = dataset.drop(labels = 'timestamp_first_active', axis = 1) 
+
+#date account created
+dataset['date_account_created'] = dataset.loc[0:,'date_account_created'].apply(str_to_date)
+
+#data_first_booking
+temp_serie = dataset.loc[0:,'date_first_booking'].apply(str)
+temp_serie = temp_serie.apply(str_to_date)
+dataset['date_first_booking'] = temp_serie 
+
+#Lag in days of 
+lag_acc_created_first_actv = (dataset['Date_first_active'] - dataset['date_account_created'])
+lag_acc_created_first_actv 
+dataset['lag_acc_created_first_actv'].plot(kind='density')
+dataset['lag_acc_created_first_actv'] = lag_acc_created_first_actv
+
+'''
+------------------DATA EXPLORATION--------------------
+'''
+dataset.head(30)
+
+#GENDER
+dataset.gender.unique()
+count_genders = dataset.gender.value_counts()
+count_genders 
+count_genders.plot(kind='bar')
+
+"""
+exploration of age and cleaning of AGE
+"""
+count_age = dataset.age.value_counts()
+count_age 
+count_age.plot(kind='density')
+
+def clean_age(age):
+    if(age<=15 and age>=10):
+        return 'Child'
+    elif(age>15 and age <=18):
+        return 'Teen'
+    elif(age>18 and age<=25):
+        return 'College_stud'
+    elif(age>25 and age<=35):
+        return 'Millenial'
+    elif(age>35 and age<=60):
+        return 'Adult'
+    elif(age>60 and age<90):
+        return 'old_person'
+    else:
+        return 'Unknow'
+    
+#application of this new function
+age_cat = dataset.loc[0:,'age'].apply(clean_age)
+age_cat.value_counts()
+
+dataset['age_cat'] = dataset.loc[0:,'age'].apply(clean_age)
+
+dataset.head(30)
+   
+
+#CREATE SOME GRAPHS HERE TO EXPLORE THE DATA
+
+dataset.language.unique()
+
+lang = dataset['language'].value_counts()
+print(lang)
+lang.plot(kind='bar')
+
+destinations = dataset['country_destination'].value_counts() 
+destinations 
+destinations.plot(kind='bar')
+
+'''
+I could create a diagram to see the language of use of the people 
+who are from the United States but who speak a specific language
+I could represent this as a diagram
+'''
+dataset.head(30)
+french_travelers = dataset[dataset['country_destination'].str.contains('FR')]
+french_speakers = french_travelers[french_travelers['language'].str.contains('fr')]
+french_travelers['id'].count()
+french_speakers['id'].count() 
+
+
+'''
+Check list before I can start preparing the data before I can start running some models:
+-Create variables: lag between different dates
+-create binary variables so that the variables appear per column instead of categories within one column
+-find a way to explore my data with graphs
+'''
+
+
+'''
+------------------SESSIONS DATA--------------------
+'''
+
+
+#EXPLORING THE DATA FROM THE SESSIONS.CSV file
+
+#import the dataset
+filename = r'C:\Users\Laurent\TermProjectML\sessions.csv'
+sessions_dataset = pd.read_csv(filename)
+
+sessions_dataset.head(30)
+
+#ACTION
+
+action_distribution = sessions_dataset.action.value_counts()
+action_distribution.plot('bar')
+action_distribution.count()
+
+"""
+data exploration and cleaning of ACTION_TYPE
+"""
+
+action_type_distr = sessions_dataset.action_type.value_counts()
+action_type_distr.plot(kind = 'bar')
+action_type_distr
+
+#action_detail
+action_detail_distr = sessions_dataset.action_detail.value_counts()
+action_detail_distr
+action_detail_distr.plot(kind='bar')
+
+"""
+Data exploration and cleaning of the DEVICE_TYPE
+"""
+device_type_distr = sessions_dataset.device_type.value_counts()
+device_type_distr
+device_type_distr.plot(kind='bar')
+
+#Function to apply to all the values to reduce the # of device
+
+def device_type_cleaning(a_str):
+    if(a_str == 'Windows Desktop' or a_str == 'Linux Desktop' or a_str == 'Chromebook'):
+        return 'Other_Desktop'
+    elif (a_str == 'iPhone' or a_str == 'iPad Tablet' or a_str == 'iPodtouch'):
+        return 'Apple_device'
+    elif (a_str == 'Mac Desktop'):
+        return 'Mac'
+    elif (a_str == '-unknown-'):
+        return 'Unknown'
+    else:
+        return 'Other_phone'
+
+#Apply the function
+new_device_cat = sessions_dataset.loc[0:,'device_type'].apply(device_type_cleaning)
+
+#new distribution
+device_cat_distr = new_device_cat.value_counts()
+device_cat_distr
+device_cat_distr.plot(kind='bar')
+
+#secs_elapsed
+secs_elapsed_distr = sessions_dataset.secs_elapsed.value_counts()
+secs_elapsed_distr.describe()
+secs_elapsed_distr.plot(kind='density')
+
+'''
+I will have to create several columns from this dataset.
+I will create a column for each different category of valyes in action
+and I will put the number of times this person did a lookup, the number of times
+they had the different action_type, the number of times we see each category of action_detail
+I think number of different device on which the user logs in, 
+the total time a user has used airbnb, the number of secs_elapsed per session, 
+the median time a user stays in a session, 
+'''
